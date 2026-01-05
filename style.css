@@ -189,13 +189,6 @@ th, td {
   text-align: center;
 }
 
-th.sticky {
-  position: sticky;
-  left: 0;
-  background: var(--card);
-  text-align: left;
-}
-
 th.today {
   background: rgba(34, 197, 94, 0.25);
   font-weight: bold;
@@ -428,4 +421,5 @@ input[type="checkbox"]:checked {
   25% { transform: translateX(-10px); }
   75% { transform: translateX(10px); }
 }
+
 
