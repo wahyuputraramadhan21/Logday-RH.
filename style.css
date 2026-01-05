@@ -316,10 +316,6 @@ input[type="checkbox"]:checked {
 .login-logo {
   width: 60px;
   height: 60px;
-  background: #ffffff;
-  color: #000;
-  font-size: 28px;
-  font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -432,3 +428,4 @@ input[type="checkbox"]:checked {
   25% { transform: translateX(-10px); }
   75% { transform: translateX(10px); }
 }
+
