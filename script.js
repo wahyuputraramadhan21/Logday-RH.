@@ -2,6 +2,11 @@ let cachedHarian = [];
 let cachedMingguan = [];
 let rangeStartDate = null;
 let rangeEndDate = null;
+// baru
+const WEB_APP_URL = "https://wahyuputraramadhan21.vercel.app/api/submit";
+const userSelect = document.getElementById("userSelect");
+const submitBtn = document.getElementById("submitBtn");
+// baru
 
 // // 1. Data Kode Unik (Simulasi)
 // const userCodes = {
@@ -15,9 +20,8 @@ let rangeEndDate = null;
 //   "Jihan": "8685"
 // };
 
-document.getElementById('loginBtn').addEventListener('click', async function() {
+document.getElementById('loginBtn').addEventListener('click', function() {
   const user = document.getElementById('userSelect').value;
-  // const code = document.getElementById('loginCode').value;
   const errorElement = document.getElementById('loginError');
 
   if (!user) {
@@ -25,44 +29,61 @@ document.getElementById('loginBtn').addEventListener('click', async function() {
     return;
   }
 
-  if (user) {
-    // Tampilkan Loading
-    document.getElementById('loginOverlay').style.display = 'none';
-    document.getElementById('loadingScreen').style.display = 'flex';
-
-
-    // 1. Sinkronkan ke userSelect lama agar sistem tahu siapa yang login
-    const mainSelect = document.getElementById('userSelect');
-    mainSelect.value = user;
-
-    document.getElementById('userDisplay').textContent = `| ${user}`;
-
-    try {
-      // 2. Pemicu Otomatis: Jalankan event 'change' yang sudah ada di script.js
-      // Ini akan menjalankan fungsi fetch(WEB_APP_URL) yang sudah Anda buat
-      mainSelect.dispatchEvent(new Event('change'));
-
-      // 3. Beri jeda sedikit agar fetch selesai, lalu tampilkan konten
-      setTimeout(() => {
-        document.getElementById('loadingScreen').style.display = 'none';
-        document.getElementById('mainContent').style.display = 'block';
-        
-        // Pastikan tabel dirender ulang jika rentang tanggal sudah ada
-        if (rangeStartDate && rangeEndDate) {
-           applyDailyData(cachedHarian);
-           applyWeeklyGrid(cachedMingguan);
-        }
-      }, 2500); 
-
-    } catch (err) {
-      console.error(err);
-      alert("Gagal memuat data.");
-      location.reload();
-    }
-  } else {
-    errorElement.textContent = "Ups nama user sakah";
-  }
+  // LANGSUNG MASUK (Tanpa Await)
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'block';
+  
+  // Set Identitas
+  document.getElementById('userDisplay').textContent = `| ${user}`;
+  
+  // Jalankan pengambilan data di background
+  loadUserData(user); 
 });
+
+// baru
+// Fungsi baru untuk handle loading state secara detail
+async function loadUserData(user) {
+  const dateRangeInput = document.getElementById('dateRange');
+  const historyContainer = document.getElementById("historyContent");
+  const updateLoading = document.getElementById('updateLoading');
+  const loadingText = document.getElementById('loadingText');
+  const loadingSubtext = document.getElementById('loadingSubtext');
+
+  // 1. Kunci input & Ubah tampilan
+  dateRangeInput.disabled = true;
+  dateRangeInput.placeholder = "⌛ Menghubungkan ke server...";
+  
+  // 2. Tampilkan Pop-up Tengah dengan pesan "Mengambil Data"
+  if (updateLoading && loadingText) {
+    updateLoading.style.display = "flex";
+    loadingText.textContent = "Sinkronisasi Data...";
+    loadingSubtext.textContent = "Mengambil data dari server...";
+  }
+
+  historyContainer.innerHTML = `
+    <div class="loading-state" style="text-align:center; padding: 20px;">
+      <div class="spinner" style="margin: 0 auto 10px auto; width:30px; height:30px;"></div>
+      <p class="muted">Sinkronisasi data ${user}...</p>
+    </div>
+  `;
+
+  try {
+    const res = await fetch(`${WEB_APP_URL}?user=${encodeURIComponent(user)}`);
+    const data = await res.json();
+
+    cachedHarian = data.harian || [];
+    cachedMingguan = data.mingguan || [];
+
+    // Render riwayat (Fungsi ini akan otomatis menutup pop-up)
+    renderHistory(cachedHarian, cachedMingguan);
+
+  } catch (error) {
+    console.error("Fetch Error:", error);
+    historyContainer.innerHTML = `<p class="error-msg">Gagal sinkronisasi data.</p>`;
+    if (updateLoading) updateLoading.style.display = "none";
+    dateRangeInput.placeholder = "Gagal terhubung.";
+  }
+}// baru
 
 function formatToLocalISO(date) {
     const offset = date.getTimezoneOffset();
@@ -248,8 +269,10 @@ flatpickr(".weekly-date", {
 
 
 // UpdateProgres
-const userSelect = document.getElementById("userSelect");
-const submitBtn = document.getElementById("submitBtn");
+// baru
+// const userSelect = document.getElementById("userSelect");
+// const submitBtn = document.getElementById("submitBtn");
+// baru
 const modal = document.getElementById("nameModal");
 const closeModal = document.getElementById("closeModal");
 
@@ -270,7 +293,7 @@ closeModal.addEventListener("click", () => {
 });
 
 // BackEnd
-const WEB_APP_URL = "https://wahyuputraramadhan21.vercel.app/api/submit";
+// const WEB_APP_URL = "https://wahyuputraramadhan21.vercel.app/api/submit";
 
     function getWeekOfMonth(date) {
     const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
@@ -413,7 +436,7 @@ const WEB_APP_URL = "https://wahyuputraramadhan21.vercel.app/api/submit";
 // });
 
 
-// NewAgain
+// baru
 submitBtn.addEventListener("click", async (e) => {
   if (userSelect.value === "") {
     e.preventDefault();
@@ -421,7 +444,19 @@ submitBtn.addEventListener("click", async (e) => {
     return;
   }
 
-  // Matikan tombol agar tidak di-klik dua kali (Double-Submit)
+  // 1. TAMPILKAN LOADING OVERLAY
+  const updateLoading = document.getElementById('updateLoading');
+  const loadingText = document.getElementById('loadingText');
+  const loadingSubtext = document.getElementById('loadingSubtext');
+
+  // Munculkan Pop-up untuk Update
+  if (updateLoading && loadingText) {
+    updateLoading.style.display = "flex";
+    loadingText.textContent = "Sedang Memproses...";
+    loadingSubtext.textContent = "Progres Anda sedang dikirim ke server.";
+  }
+
+  // Matikan tombol agar tidak di-klik dua kali
   submitBtn.disabled = true;
   submitBtn.innerText = "Memproses...";
 
@@ -440,7 +475,7 @@ submitBtn.addEventListener("click", async (e) => {
     checkboxes.forEach((cb, i) => {
       const tgl = dates[i];
       if (cb.checked) {
-        // CEK: Apakah data ini sudah ada di cachedHarian (database)?
+        // CEK: Apakah data ini sudah ada di cachedHarian?
         const sudahAda = cachedHarian.some(old => 
           old.tanggal === tgl && old.tugas === taskName
         );
@@ -460,7 +495,6 @@ submitBtn.addEventListener("click", async (e) => {
      KUMPULKAN DATA MINGGUAN (FILTER DUPLIKAT)
      ===================== */
   const mingguan = [];
-
   document.querySelectorAll("#weeklyBody tr").forEach(row => {
     const task = row.querySelector(".sticky").textContent.trim();
     const checkboxes = row.querySelectorAll("input[type='checkbox']");
@@ -484,8 +518,9 @@ submitBtn.addEventListener("click", async (e) => {
     });
   });
 
-  // CEK: Jika tidak ada data baru, jangan kirim apa-apa
+  // CEK: Jika tidak ada data baru
   if (harian.length === 0 && mingguan.length === 0) {
+    updateLoading.style.display = "none";
     alert("Semua data yang dipilih sudah tersimpan sebelumnya.");
     submitBtn.disabled = false;
     submitBtn.innerText = "Update Progress";
@@ -505,21 +540,27 @@ submitBtn.addEventListener("click", async (e) => {
     const response = await fetch(WEB_APP_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({ user: userSelect.value, harian, mingguan })
     });
 
     if (response.ok) {
+      if (loadingText) {
+        loadingText.textContent = "Menyegarkan Data...";
+        loadingSubtext.textContent = "Mengambil data terbaru dari server...";
+      }
+      
+      await loadUserData(userSelect.value); 
       alert("✅ Progress berhasil diupdate!");
-      // Opsional: Refresh halaman atau ambil data terbaru lagi
-      location.reload(); 
     }
   } catch (err) {
     alert("❌ Gagal mengirim data: " + err.message);
   } finally {
     submitBtn.disabled = false;
     submitBtn.innerText = "Update Progress";
+    if (updateLoading) updateLoading.style.display = "none";
   }
 });
+// baru
 
 // doget
 userSelect.addEventListener("change", async () => {
@@ -544,23 +585,33 @@ userSelect.addEventListener("change", async () => {
   }
 });
 
-
+// baru
 // tamabahan doget
 function renderHistory(harian = [], mingguan = []) {
   const container = document.getElementById("historyContent");
+  const dateRangeInput = document.getElementById('dateRange');
+  const updateLoading = document.getElementById('updateLoading'); // Ambil element overlay loading
+  
+  // 1. Buat kontainer kosong sementara (fragment) untuk efisiensi render
+  const fragment = document.createDocumentFragment();
 
+  // Jika tidak ada data sama sekali
   if (harian.length === 0 && mingguan.length === 0) {
     container.innerHTML = `<p class="muted">Belum ada riwayat.</p>`;
+    
+    // Pastikan loading ditutup dan filter dibuka
+    if (updateLoading) updateLoading.style.display = "none";
+    dateRangeInput.disabled = false;
+    dateRangeInput.style.opacity = "1";
+    dateRangeInput.placeholder = "Klik untuk pilih tanggal";
     return;
   }
 
-  container.innerHTML = "";
-
-  // ===== HARIAN =====
+  // 2. ===== BAGIAN HARIAN =====
   if (harian.length > 0) {
     const hTitle = document.createElement("h4");
     hTitle.textContent = "📅 Progres Harian";
-    container.appendChild(hTitle);
+    fragment.appendChild(hTitle);
 
     harian
       .slice(-10)
@@ -572,15 +623,15 @@ function renderHistory(harian = [], mingguan = []) {
           <b>${item.tugas}</b>
           <span>— ${item.tanggal} (${item.status})</span>
         `;
-        container.appendChild(div);
+        fragment.appendChild(div);
       });
   }
 
-  // ===== MINGGUAN =====
+  // 3. ===== BAGIAN MINGGUAN =====
   if (mingguan.length > 0) {
     const mTitle = document.createElement("h4");
     mTitle.textContent = "📆 Progres Mingguan";
-    container.appendChild(mTitle);
+    fragment.appendChild(mTitle);
 
     mingguan
       .slice(-5)
@@ -596,11 +647,29 @@ function renderHistory(harian = [], mingguan = []) {
             · ${item.status}
           </span>
         `;
-        container.appendChild(div);
+        fragment.appendChild(div);
       });
   }
-}
 
+  // 4. MASUKKAN KE DOM
+  container.innerHTML = ""; 
+  container.appendChild(fragment);
+
+  // 5. FINISH: Tutup loading overlay dan aktifkan kembali filter tanggal
+  if (updateLoading) updateLoading.style.display = "none";
+  
+  dateRangeInput.disabled = false;
+  dateRangeInput.style.opacity = "1";
+  dateRangeInput.placeholder = "Klik untuk pilih tanggal";
+  
+  // 6. Sinkronisasi Tabel: Jika filter tanggal sudah aktif, langsung perbarui tampilan tabel
+  if (rangeStartDate && rangeEndDate) {
+    applyDailyData(cachedHarian);
+    applyWeeklyGrid(cachedMingguan);
+  }
+  
+  console.log("Render selesai, loading ditutup, filter diaktifkan.");
+}// baru
 
 function applyDailyData(harian) {
   console.log("ISI HARIAN:", harian);
@@ -723,10 +792,3 @@ function applyWeeklyGrid(mingguan) {
     if (checkbox) checkbox.checked = true;
   });
 }
-
-
-
-
-
-
-
