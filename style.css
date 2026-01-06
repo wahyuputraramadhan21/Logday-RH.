@@ -422,4 +422,67 @@ input[type="checkbox"]:checked {
   75% { transform: translateX(10px); }
 }
 
+.spinner-small {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-left-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 10px auto;
+}
+
+input:disabled {
+  background: #334155 !important;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+/* baru */
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.spinner-small {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 10px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; 
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.8); /* Gelap transparan */
+  display: none; /* Default sembunyi */
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  background: var(--card);
+  padding: 30px;
+  border-radius: 15px;
+  min-width: 250px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+
+/* Warna teks placeholder saat loading (biar tidak terlalu gelap) */
+#dateRange::placeholder {
+  color: #ffffff; /* Abu-abu terang agar kontras di BG gelap */
+  opacity: 1;
+}
 
